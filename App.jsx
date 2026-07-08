@@ -1630,3 +1630,4 @@ const S = {
   small: { fontSize: 11.5, color: "#8F857A", marginTop: 8, lineHeight: 1.5 },
   footer: { textAlign: "center", fontSize: 11.5, color: "#8F857A", padding: "0 20px 30px", maxWidth: 1000, margin: "0 auto" },
 };
+ 
