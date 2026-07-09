@@ -702,18 +702,26 @@ Follow ${handle} for daily lines from the —BORN Universe.
         const local = el - idx * per;
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, fmt.w, fmt.h);
-        const drawImg = (im, alpha, zoomP) => {
-          const z = 1 + 0.06 * zoomP;
+        // Ken Burns v8: eased 18% travel (1.06↔1.24), alternating in/out per
+        // slide, plus a small drift that stays inside the cover-scale slack so
+        // no background edge ever shows. v7's 6% linear zoom was imperceptible.
+        const ease = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : p * p * (3 - 2 * p));
+        const drawImg = (im, alpha, zoomP, slideIdx) => {
+          const p = ease(zoomP);
+          const zoomIn = slideIdx % 2 === 0;
+          const z = zoomIn ? 1.06 + 0.18 * p : 1.24 - 0.18 * p;
           const s = Math.max(fmt.w / im.width, fmt.h / im.height) * z;
           const dw = im.width * s, dh = im.height * s;
+          const driftX = (slideIdx % 4 < 2 ? 1 : -1) * fmt.w * 0.025 * p;
+          const driftY = (slideIdx % 2 ? -1 : 1) * fmt.h * 0.012 * p;
           ctx.save();
           ctx.globalAlpha = alpha;
-          ctx.drawImage(im, (fmt.w - dw) / 2, (fmt.h - dh) / 2, dw, dh);
+          ctx.drawImage(im, (fmt.w - dw) / 2 + driftX, (fmt.h - dh) / 2 + driftY, dw, dh);
           ctx.restore();
         };
-        drawImg(imgs[idx], 1, local / per);
+        drawImg(imgs[idx], 1, local / per, idx);
         if (idx + 1 < imgs.length && local > per - fadeMs) {
-          drawImg(imgs[idx + 1], (local - (per - fadeMs)) / fadeMs, 0);
+          drawImg(imgs[idx + 1], (local - (per - fadeMs)) / fadeMs, 0, idx + 1);
         }
       };
       const canMp4 = typeof MediaRecorder !== "undefined" && typeof c.captureStream === "function"
@@ -1630,4 +1638,3 @@ const S = {
   small: { fontSize: 11.5, color: "#8F857A", marginTop: 8, lineHeight: 1.5 },
   footer: { textAlign: "center", fontSize: 11.5, color: "#8F857A", padding: "0 20px 30px", maxWidth: 1000, margin: "0 auto" },
 };
- 
